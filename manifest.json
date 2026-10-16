@@ -1,7 +1,7 @@
 {
   "id": "figure-layouts",
   "name": "Figure Layouts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "1.5.0",
   "description": "Captioned figures, side-by-side image rows and [!gallery|N] grids, in reading view and Live Preview.",
   "author": "Jack Morrison",
