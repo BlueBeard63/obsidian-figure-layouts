@@ -1,17 +1,17 @@
-/* Image Layouts: one image on its own line = a figure at its natural shape with its caption below;
+/* Figure Layouts: one image on its own line = a figure at its natural shape with its caption below;
    several on one line = a row of equal 4:3 cells; > [!gallery|N] = an N-column grid of 4:3 cells
    with the callout title as one caption under the set. Follows the theme's own colours and fonts. */
 
-.imgl-caption {
+.figl-caption {
   display: block;
   font-family: var(--font-monospace);
   font-size: 12px;
   line-height: 1.5;
   color: var(--text-muted);
 }
-.imgl-caption:empty { display: none; }
+.figl-caption:empty { display: none; }
 
-.imgl-item {
+.figl-item {
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -21,32 +21,32 @@
 
 /* ---------- reading view (and callouts rendered in Live Preview) ---------- */
 
-.markdown-rendered .imgl-figure .imgl-item { gap: 10px; }
-.markdown-rendered .imgl-figure img { max-height: 80vh; }
+.markdown-rendered .figl-figure .figl-item { gap: 10px; }
+.markdown-rendered .figl-figure img { max-height: 80vh; }
 
-.markdown-rendered .imgl-row,
-.markdown-rendered .imgl-grid {
+.markdown-rendered .figl-row,
+.markdown-rendered .figl-grid {
   display: grid;
-  grid-template-columns: repeat(var(--imgl-cols, 2), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--figl-cols, 2), minmax(0, 1fr));
   gap: 12px;
 }
-.markdown-rendered .imgl-row > br,
-.markdown-rendered .imgl-grid br { display: none; }
-.markdown-rendered .imgl-grid > p { display: contents; }
+.markdown-rendered .figl-row > br,
+.markdown-rendered .figl-grid br { display: none; }
+.markdown-rendered .figl-grid > p { display: contents; }
 
-.imgl-row .imgl-item img,
-.imgl-grid .imgl-item img,
-.imgl-lp-row .image-embed img {
+.figl-row .figl-item img,
+.figl-grid .figl-item img,
+.figl-lp-row .image-embed img {
   display: block;
   width: 100% !important;
   height: auto !important;
   aspect-ratio: 4 / 3;
   object-fit: cover;
 }
-.imgl-item > .internal-embed { display: block; }
+.figl-item > .internal-embed { display: block; }
 
 /* gallery callout: no box or icon, the title becomes the caption under the grid */
-.callout.imgl-gallery {
+.callout.figl-gallery {
   display: flex;
   flex-direction: column;
   background: none;
@@ -54,9 +54,9 @@
   padding: 0;
   mix-blend-mode: normal;
 }
-.callout.imgl-gallery .callout-icon,
-.callout.imgl-gallery .callout-fold { display: none; }
-.callout.imgl-gallery .callout-title {
+.callout.figl-gallery .callout-icon,
+.callout.figl-gallery .callout-fold { display: none; }
+.callout.figl-gallery .callout-title {
   order: 2;
   padding: 0;
   margin-top: 10px;
@@ -65,18 +65,18 @@
   font-weight: normal;
   color: var(--text-muted);
 }
-.callout.imgl-gallery.imgl-untitled .callout-title { display: none; }
-.callout.imgl-gallery .callout-content { padding: 0; background: none; }
+.callout.figl-gallery.figl-untitled .callout-title { display: none; }
+.callout.figl-gallery .callout-content { padding: 0; background: none; }
 
 /* aside callout: the leading image(s) in a column beside the text, the title as their caption */
-.callout.imgl-aside {
+.callout.figl-aside {
   background: none;
   border: 0;
   padding: 0;
   mix-blend-mode: normal;
 }
-.callout.imgl-aside > .callout-title { display: none; }
-.callout.imgl-aside .imgl-aside-grid {
+.callout.figl-aside > .callout-title { display: none; }
+.callout.figl-aside .figl-aside-grid {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   gap: 24px;
@@ -84,25 +84,25 @@
   padding: 0;
   background: none;
 }
-.callout.imgl-aside .imgl-aside-grid.imgl-left { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
-.callout.imgl-aside .imgl-aside-grid.imgl-right .imgl-aside-media { order: 2; }
-.imgl-aside-media {
+.callout.figl-aside .figl-aside-grid.figl-left { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+.callout.figl-aside .figl-aside-grid.figl-right .figl-aside-media { order: 2; }
+.figl-aside-media {
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 /* a tall photo is capped so it can't dwarf the text beside it */
-.imgl-aside-media img { display: block; max-width: 100%; max-height: 60vh; width: auto; height: auto; }
-.imgl-aside-text > :first-child { margin-top: 0; }
-.imgl-aside-text > :last-child { margin-bottom: 0; }
+.figl-aside-media img { display: block; max-width: 100%; max-height: 60vh; width: auto; height: auto; }
+.figl-aside-text > :first-child { margin-top: 0; }
+.figl-aside-text > :last-child { margin-bottom: 0; }
 
 /* ---------- Live Preview: lines that hold only images ---------- */
 
-.cm-line.imgl-lp-figure .imgl-lp-caption { margin-top: 10px; }
+.cm-line.figl-lp-figure .figl-lp-caption { margin-top: 10px; }
 
 /* Each image is followed by its caption widget, so two rows filled column by column pair them up. */
-.cm-line.imgl-lp-row {
+.cm-line.figl-lp-row {
   display: grid;
   grid-template-rows: auto auto;
   grid-auto-flow: column;
@@ -111,13 +111,13 @@
   row-gap: 8px;
   align-items: start;
 }
-.cm-line.imgl-lp-row > .cm-widgetBuffer { display: none; }
-.cm-line.imgl-lp-row > .image-embed { display: block; margin: 0; }
+.cm-line.figl-lp-row > .cm-widgetBuffer { display: none; }
+.cm-line.figl-lp-row > .image-embed { display: block; margin: 0; }
 
 /* ---------- phones: at most two across ---------- */
 
-.is-phone .markdown-rendered .imgl-row,
-.is-phone .markdown-rendered .imgl-grid { grid-template-columns: repeat(var(--imgl-cols-phone, 2), minmax(0, 1fr)); }
+.is-phone .markdown-rendered .figl-row,
+.is-phone .markdown-rendered .figl-grid { grid-template-columns: repeat(var(--figl-cols-phone, 2), minmax(0, 1fr)); }
 /* asides stack, image first */
-.is-phone .callout.imgl-aside .imgl-aside-grid { grid-template-columns: minmax(0, 1fr); }
-.is-phone .callout.imgl-aside .imgl-aside-grid .imgl-aside-media { order: 0; }
+.is-phone .callout.figl-aside .figl-aside-grid { grid-template-columns: minmax(0, 1fr); }
+.is-phone .callout.figl-aside .figl-aside-grid .figl-aside-media { order: 0; }

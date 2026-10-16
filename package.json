@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-image-layouts",
+  "name": "obsidian-figure-layouts",
   "version": "1.0.0",
   "private": true,
   "description": "Obsidian plugin: captioned figures, image rows and gallery grids.",
@@ -25,6 +25,6 @@
   "author": "Jack Morrison",
   "repository": {
     "type": "git",
-    "url": "https://github.com/BlueBeard63/obsidian-image-layouts.git"
+    "url": "https://github.com/BlueBeard63/obsidian-figure-layouts.git"
   }
 }

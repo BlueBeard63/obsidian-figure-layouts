@@ -25,7 +25,7 @@ jobs:
       - name: Check the tag matches manifest.json
         run: test "$(node -p "require('./manifest.json').version")" = "${GITHUB_REF_NAME}"
       # Build provenance: proves each asset was built from this repo, at this tag, by this workflow.
-      # Check a download with: gh attestation verify main.js -R BlueBeard63/obsidian-image-layouts
+      # Check a download with: gh attestation verify main.js -R BlueBeard63/obsidian-figure-layouts
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v2
         with:

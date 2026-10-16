@@ -1,4 +1,4 @@
-# Image Layouts
+# Figure Layouts
 
 An Obsidian plugin that lays out images the way a write-up or portfolio page would, in reading view and Live Preview.
 
@@ -49,5 +49,5 @@ OBSIDIAN_VAULT="D:/path/to/vault" npm run dev   # watch, and install into a vaul
 
 Release: `npm version <x.y.z>`, then push the tag; the workflow publishes `main.js`, `manifest.json` and `styles.css`.
 
-The demo vault has two notes: **Image layouts test** (every layout and edge case, each saying what to expect) and
+The demo vault has two notes: **Figure layouts test** (every layout and edge case, each saying what to expect) and
 **Three days in the fells** (a short write-up using every layout, for the README and listing screenshots).

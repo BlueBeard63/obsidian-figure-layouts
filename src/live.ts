@@ -14,7 +14,7 @@ class CaptionWidget extends WidgetType {
     return other.text === this.text;
   }
   override toDOM(): HTMLElement {
-    return createSpan({ cls: "imgl-caption imgl-lp-caption", text: this.text });
+    return createSpan({ cls: "figl-caption figl-lp-caption", text: this.text });
   }
 }
 
@@ -45,8 +45,8 @@ function build(view: EditorView): DecorationSet {
       const cols = images.length;
       decos.push(
         Decoration.line({
-          class: cols === 1 ? "imgl-lp-figure" : "imgl-lp-row",
-          attributes: { style: `--imgl-cols: ${cols}; --imgl-cols-phone: ${phoneColumns(cols)}` },
+          class: cols === 1 ? "figl-lp-figure" : "figl-lp-row",
+          attributes: { style: `--figl-cols: ${cols}; --figl-cols-phone: ${phoneColumns(cols)}` },
         }).range(line.from),
       );
       for (const img of images) {

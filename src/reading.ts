@@ -1,7 +1,7 @@
 import type { MarkdownPostProcessorContext, Plugin } from "obsidian";
 import { asideSide, captionFor, galleryColumns, isImageFile, parseCalloutHeader, phoneColumns } from "./parse";
 
-const DONE = "imgl-done";
+const DONE = "figl-done";
 const LAID_OUT = '.callout[data-callout="gallery"], .callout[data-callout="aside"]';
 
 export function registerReadingView(plugin: Plugin): void {
@@ -50,17 +50,17 @@ function captionOf(img: HTMLElement): string {
 
 /** Wraps one image in a figure with its caption underneath (when it has one). */
 function wrapItem(img: HTMLElement): HTMLElement {
-  const item = createEl("figure", { cls: "imgl-item" });
+  const item = createEl("figure", { cls: "figl-item" });
   img.replaceWith(item);
   item.appendChild(img);
   const caption = captionOf(img);
-  if (caption) item.createEl("figcaption", { cls: "imgl-caption", text: caption });
+  if (caption) item.createEl("figcaption", { cls: "figl-caption", text: caption });
   return item;
 }
 
 function setColumns(el: HTMLElement, cols: number): void {
-  el.style.setProperty("--imgl-cols", String(cols));
-  el.style.setProperty("--imgl-cols-phone", String(phoneColumns(cols)));
+  el.style.setProperty("--figl-cols", String(cols));
+  el.style.setProperty("--figl-cols-phone", String(phoneColumns(cols)));
 }
 
 /** One image on its own: a figure at its natural shape. Several: a row of equal 4:3 cells. */
@@ -68,7 +68,7 @@ function layoutParagraph(p: HTMLElement): void {
   if (p.hasClass(DONE)) return;
   const images = imageChildren(p);
   if (!images) return;
-  p.addClass(DONE, images.length === 1 ? "imgl-figure" : "imgl-row");
+  p.addClass(DONE, images.length === 1 ? "figl-figure" : "figl-row");
   if (images.length > 1) setColumns(p, images.length);
   images.forEach(wrapItem);
 }
@@ -82,11 +82,11 @@ function layoutGallery(callout: HTMLElement, ctx: MarkdownPostProcessorContext, 
   for (const p of Array.from(content.querySelectorAll<HTMLElement>("p"))) {
     images.push(...(imageChildren(p) ?? []));
   }
-  callout.addClass(DONE, "imgl-gallery");
-  content.addClass("imgl-grid");
+  callout.addClass(DONE, "figl-gallery");
+  content.addClass("figl-grid");
   setColumns(content, galleryColumns(callout.getAttribute("data-callout-metadata"), images.length));
   images.forEach(wrapItem);
-  if (!hasTitle(callout, "gallery", ctx, root)) callout.addClass("imgl-untitled");
+  if (!hasTitle(callout, "gallery", ctx, root)) callout.addClass("figl-untitled");
 }
 
 /**
@@ -97,11 +97,11 @@ function layoutAside(callout: HTMLElement, ctx: MarkdownPostProcessorContext, ro
   if (callout.hasClass(DONE)) return;
   const content = callout.querySelector<HTMLElement>(".callout-content");
   if (!content) return;
-  callout.addClass(DONE, "imgl-aside");
-  content.addClass("imgl-aside-grid", `imgl-${asideSide(callout.getAttribute("data-callout-metadata"))}`);
+  callout.addClass(DONE, "figl-aside");
+  content.addClass("figl-aside-grid", `figl-${asideSide(callout.getAttribute("data-callout-metadata"))}`);
 
   // The leading images of the first paragraph, even when text follows on the next line (same paragraph).
-  const media = createEl("figure", { cls: "imgl-aside-media" });
+  const media = createEl("figure", { cls: "figl-aside-media" });
   const first = content.firstElementChild;
   if (first instanceof HTMLElement && first.tagName === "P") {
     for (const node of Array.from(first.childNodes)) {
@@ -113,12 +113,12 @@ function layoutAside(callout: HTMLElement, ctx: MarkdownPostProcessorContext, ro
   }
   Array.from(media.children).forEach((img) => wrapItem(img as HTMLElement));
 
-  const text = createDiv({ cls: "imgl-aside-text" });
+  const text = createDiv({ cls: "figl-aside-text" });
   while (content.firstChild) text.appendChild(content.firstChild);
   if (media.hasChildNodes()) {
     if (hasTitle(callout, "aside", ctx, root)) {
       const title = callout.querySelector(".callout-title-inner")?.textContent?.trim() ?? "";
-      media.createEl("figcaption", { cls: "imgl-caption", text: title });
+      media.createEl("figcaption", { cls: "figl-caption", text: title });
     }
     content.appendChild(media);
   }

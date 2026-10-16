@@ -16,12 +16,12 @@ const installIntoVault = {
   setup(build) {
     build.onEnd(async (result) => {
       if (result.errors.length || !vault) return;
-      const dir = resolve(vault, ".obsidian/plugins/image-layouts");
+      const dir = resolve(vault, ".obsidian/plugins/figure-layouts");
       await mkdir(dir, { recursive: true });
       for (const f of ["main.js", "manifest.json", "styles.css"]) {
         await copyFile(resolve(here, f), resolve(dir, f));
       }
-      console.log(`[image-layouts] installed into ${dir}`);
+      console.log(`[figure-layouts] installed into ${dir}`);
     });
   },
 };
