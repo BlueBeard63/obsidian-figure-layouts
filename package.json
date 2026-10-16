@@ -1,6 +1,6 @@
 {
   "name": "obsidian-figure-layouts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Obsidian plugin: captioned figures, image rows and gallery grids.",
   "type": "module",
