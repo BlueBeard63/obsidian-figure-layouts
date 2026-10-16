@@ -1,0 +1,10 @@
+{
+  "id": "image-layouts",
+  "name": "Image Layouts",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Captioned figures, side-by-side image rows and [!gallery|N] grids, in reading view and Live Preview.",
+  "author": "Jack Morrison",
+  "authorUrl": "https://github.com/BlueBeard63",
+  "isDesktopOnly": false
+}

@@ -1,0 +1,137 @@
+import type { MarkdownPostProcessorContext, Plugin } from "obsidian";
+import { asideSide, captionFor, galleryColumns, isImageFile, parseCalloutHeader, phoneColumns } from "./parse";
+
+const DONE = "imgl-done";
+const LAID_OUT = '.callout[data-callout="gallery"], .callout[data-callout="aside"]';
+
+export function registerReadingView(plugin: Plugin): void {
+  plugin.registerMarkdownPostProcessor((el, ctx) => {
+    for (const callout of Array.from(el.querySelectorAll<HTMLElement>('.callout[data-callout="gallery"]'))) {
+      layoutGallery(callout, ctx, el);
+    }
+    for (const callout of Array.from(el.querySelectorAll<HTMLElement>('.callout[data-callout="aside"]'))) {
+      layoutAside(callout, ctx, el);
+    }
+    const paras = el.tagName === "P" ? [el] : Array.from(el.querySelectorAll<HTMLElement>("p"));
+    for (const p of paras) {
+      if (!p.closest(LAID_OUT)) layoutParagraph(p);
+    }
+  });
+}
+
+/** True for a Markdown <img> or an embed of an image file. Post-processors run before embeds load, and
+ *  Obsidian only adds "image-embed" once one has, so embeds are judged by their file name. */
+function isImage(node: Node): node is HTMLElement {
+  if (!(node instanceof HTMLElement)) return false;
+  if (node.tagName === "IMG") return true;
+  return node.hasClass("internal-embed") && (node.hasClass("image-embed") || isImageFile(node.getAttribute("src") ?? ""));
+}
+
+/** Whitespace and line breaks between images. */
+function isFiller(node: Node): boolean {
+  if (node.nodeType === Node.TEXT_NODE) return !(node.textContent ?? "").trim();
+  return node instanceof HTMLElement && node.tagName === "BR";
+}
+
+/** The images of a paragraph that holds only images (and whitespace or line breaks), else null. */
+function imageChildren(p: HTMLElement): HTMLElement[] | null {
+  const images: HTMLElement[] = [];
+  for (const node of Array.from(p.childNodes)) {
+    if (isImage(node)) images.push(node);
+    else if (!isFiller(node)) return null;
+  }
+  return images.length ? images : null;
+}
+
+function captionOf(img: HTMLElement): string {
+  if (img.tagName === "IMG") return captionFor(img.getAttribute("alt"));
+  return captionFor(img.getAttribute("alt"), img.getAttribute("src") ?? "");
+}
+
+/** Wraps one image in a figure with its caption underneath (when it has one). */
+function wrapItem(img: HTMLElement): HTMLElement {
+  const item = createEl("figure", { cls: "imgl-item" });
+  img.replaceWith(item);
+  item.appendChild(img);
+  const caption = captionOf(img);
+  if (caption) item.createEl("figcaption", { cls: "imgl-caption", text: caption });
+  return item;
+}
+
+function setColumns(el: HTMLElement, cols: number): void {
+  el.style.setProperty("--imgl-cols", String(cols));
+  el.style.setProperty("--imgl-cols-phone", String(phoneColumns(cols)));
+}
+
+/** One image on its own: a figure at its natural shape. Several: a row of equal 4:3 cells. */
+function layoutParagraph(p: HTMLElement): void {
+  if (p.hasClass(DONE)) return;
+  const images = imageChildren(p);
+  if (!images) return;
+  p.addClass(DONE, images.length === 1 ? "imgl-figure" : "imgl-row");
+  if (images.length > 1) setColumns(p, images.length);
+  images.forEach(wrapItem);
+}
+
+/** > [!gallery|N] Caption: every image inside, in an N-column grid, the title as the caption below. */
+function layoutGallery(callout: HTMLElement, ctx: MarkdownPostProcessorContext, root: HTMLElement): void {
+  if (callout.hasClass(DONE)) return;
+  const content = callout.querySelector<HTMLElement>(".callout-content");
+  if (!content) return;
+  const images: HTMLElement[] = [];
+  for (const p of Array.from(content.querySelectorAll<HTMLElement>("p"))) {
+    images.push(...(imageChildren(p) ?? []));
+  }
+  callout.addClass(DONE, "imgl-gallery");
+  content.addClass("imgl-grid");
+  setColumns(content, galleryColumns(callout.getAttribute("data-callout-metadata"), images.length));
+  images.forEach(wrapItem);
+  if (!hasTitle(callout, "gallery", ctx, root)) callout.addClass("imgl-untitled");
+}
+
+/**
+ * > [!aside|right] Caption: the images at the start of the callout in a column beside the rest of it
+ * (right by default, |left for the other side), the title as their caption.
+ */
+function layoutAside(callout: HTMLElement, ctx: MarkdownPostProcessorContext, root: HTMLElement): void {
+  if (callout.hasClass(DONE)) return;
+  const content = callout.querySelector<HTMLElement>(".callout-content");
+  if (!content) return;
+  callout.addClass(DONE, "imgl-aside");
+  content.addClass("imgl-aside-grid", `imgl-${asideSide(callout.getAttribute("data-callout-metadata"))}`);
+
+  // The leading images of the first paragraph, even when text follows on the next line (same paragraph).
+  const media = createEl("figure", { cls: "imgl-aside-media" });
+  const first = content.firstElementChild;
+  if (first instanceof HTMLElement && first.tagName === "P") {
+    for (const node of Array.from(first.childNodes)) {
+      if (isImage(node)) media.appendChild(node);
+      else if (isFiller(node)) node.remove();
+      else break;
+    }
+    if (!first.hasChildNodes()) first.remove();
+  }
+  Array.from(media.children).forEach((img) => wrapItem(img as HTMLElement));
+
+  const text = createDiv({ cls: "imgl-aside-text" });
+  while (content.firstChild) text.appendChild(content.firstChild);
+  if (media.hasChildNodes()) {
+    if (hasTitle(callout, "aside", ctx, root)) {
+      const title = callout.querySelector(".callout-title-inner")?.textContent?.trim() ?? "";
+      media.createEl("figcaption", { cls: "imgl-caption", text: title });
+    }
+    content.appendChild(media);
+  }
+  content.appendChild(text);
+}
+
+/** Obsidian shows the callout type ("Gallery") when there is no title; the site shows no caption. */
+function hasTitle(callout: HTMLElement, type: string, ctx: MarkdownPostProcessorContext, root: HTMLElement): boolean {
+  const info = ctx.getSectionInfo(root);
+  if (info) {
+    const header = parseCalloutHeader(info.text.split("\n")[info.lineStart] ?? "");
+    if (header?.type === type) return header.title !== "";
+  }
+  const title = callout.querySelector(".callout-title-inner")?.textContent?.trim() ?? "";
+  return title !== "" && title.toLowerCase() !== type;
+}
