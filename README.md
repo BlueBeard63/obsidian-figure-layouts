@@ -30,6 +30,7 @@ An Obsidian plugin that lays out images the way a write-up or portfolio page wou
 - The number after `gallery|` is the column count. Leave it out and it uses the number of images, up to 3.
 - A number after an image's bar, like `![[shot.png|400]]`, is a display width (Obsidian's own syntax), not a caption.
 - Markdown images work too: `![The caption](shot.png)`.
+- Videos (`.mp4`, `.webm`, `.m4v`, `.mov`) get the same layouts and captions as images.
 - Row and gallery cells are cropped to 4:3.
 - On phones, rows and galleries show at most two images across (reading view).
 - In Live Preview, the line the cursor is on shows its source as usual.

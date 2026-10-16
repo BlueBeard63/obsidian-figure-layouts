@@ -1,20 +1,21 @@
 import type { MarkdownPostProcessorContext, Plugin } from "obsidian";
-import { asideSide, captionFor, galleryColumns, isImageFile, parseCalloutHeader, phoneColumns } from "./parse";
+import { asideSide, captionFor, embedCaptions, galleryColumns, isMediaFile, parseCalloutHeader, phoneColumns } from "./parse";
 
 const DONE = "figl-done";
 const LAID_OUT = '.callout[data-callout="gallery"], .callout[data-callout="aside"]';
 
 export function registerReadingView(plugin: Plugin): void {
   plugin.registerMarkdownPostProcessor((el, ctx) => {
+    const captions = sourceCaptions(ctx, el);
     for (const callout of Array.from(el.querySelectorAll<HTMLElement>('.callout[data-callout="gallery"]'))) {
-      layoutGallery(callout, ctx, el);
+      layoutGallery(callout, ctx, el, captions);
     }
     for (const callout of Array.from(el.querySelectorAll<HTMLElement>('.callout[data-callout="aside"]'))) {
-      layoutAside(callout, ctx, el);
+      layoutAside(callout, ctx, el, captions);
     }
     const paras = el.tagName === "P" ? [el] : Array.from(el.querySelectorAll<HTMLElement>("p"));
     for (const p of paras) {
-      if (!p.closest(LAID_OUT)) layoutParagraph(p);
+      if (!p.closest(LAID_OUT)) layoutParagraph(p, captions);
     }
   });
 }
@@ -24,7 +25,7 @@ export function registerReadingView(plugin: Plugin): void {
 function isImage(node: Node): node is HTMLElement {
   if (!(node instanceof HTMLElement)) return false;
   if (node.tagName === "IMG") return true;
-  return node.hasClass("internal-embed") && (node.hasClass("image-embed") || isImageFile(node.getAttribute("src") ?? ""));
+  return node.hasClass("internal-embed") && (node.hasClass("image-embed") || node.hasClass("video-embed") || isMediaFile(node.getAttribute("src") ?? ""));
 }
 
 /** Whitespace and line breaks between images. */
@@ -43,17 +44,29 @@ function imageChildren(p: HTMLElement): HTMLElement[] | null {
   return images.length ? images : null;
 }
 
-function captionOf(img: HTMLElement): string {
+/** Captions from the section's source text, by file name; each one is used up as its embed is laid out. */
+type Captions = Map<string, string[]>;
+
+function sourceCaptions(ctx: MarkdownPostProcessorContext, el: HTMLElement): Captions {
+  const info = ctx.getSectionInfo(el);
+  if (!info) return new Map();
+  return embedCaptions(info.text.split("\n").slice(info.lineStart, info.lineEnd + 1).join("\n"));
+}
+
+function captionOf(img: HTMLElement, captions: Captions): string {
   if (img.tagName === "IMG") return captionFor(img.getAttribute("alt"));
-  return captionFor(img.getAttribute("alt"), img.getAttribute("src") ?? "");
+  const src = img.getAttribute("src") ?? "";
+  // The source wins: Obsidian leaves alt empty on video embeds. alt is the fallback when the section's
+  // source isn't available (a callout drawn in Live Preview).
+  return captions.get(src)?.shift() ?? captionFor(img.getAttribute("alt"), src);
 }
 
 /** Wraps one image in a figure with its caption underneath (when it has one). */
-function wrapItem(img: HTMLElement): HTMLElement {
+function wrapItem(img: HTMLElement, captions: Captions): HTMLElement {
   const item = createEl("figure", { cls: "figl-item" });
   img.replaceWith(item);
   item.appendChild(img);
-  const caption = captionOf(img);
+  const caption = captionOf(img, captions);
   if (caption) item.createEl("figcaption", { cls: "figl-caption", text: caption });
   return item;
 }
@@ -64,17 +77,17 @@ function setColumns(el: HTMLElement, cols: number): void {
 }
 
 /** One image on its own: a figure at its natural shape. Several: a row of equal 4:3 cells. */
-function layoutParagraph(p: HTMLElement): void {
+function layoutParagraph(p: HTMLElement, captions: Captions): void {
   if (p.hasClass(DONE)) return;
   const images = imageChildren(p);
   if (!images) return;
   p.addClass(DONE, images.length === 1 ? "figl-figure" : "figl-row");
   if (images.length > 1) setColumns(p, images.length);
-  images.forEach(wrapItem);
+  images.forEach((img) => wrapItem(img, captions));
 }
 
 /** > [!gallery|N] Caption: every image inside, in an N-column grid, the title as the caption below. */
-function layoutGallery(callout: HTMLElement, ctx: MarkdownPostProcessorContext, root: HTMLElement): void {
+function layoutGallery(callout: HTMLElement, ctx: MarkdownPostProcessorContext, root: HTMLElement, captions: Captions): void {
   if (callout.hasClass(DONE)) return;
   const content = callout.querySelector<HTMLElement>(".callout-content");
   if (!content) return;
@@ -85,7 +98,7 @@ function layoutGallery(callout: HTMLElement, ctx: MarkdownPostProcessorContext, 
   callout.addClass(DONE, "figl-gallery");
   content.addClass("figl-grid");
   setColumns(content, galleryColumns(callout.getAttribute("data-callout-metadata"), images.length));
-  images.forEach(wrapItem);
+  images.forEach((img) => wrapItem(img, captions));
   if (!hasTitle(callout, "gallery", ctx, root)) callout.addClass("figl-untitled");
 }
 
@@ -93,7 +106,7 @@ function layoutGallery(callout: HTMLElement, ctx: MarkdownPostProcessorContext, 
  * > [!aside|right] Caption: the images at the start of the callout in a column beside the rest of it
  * (right by default, |left for the other side), the title as their caption.
  */
-function layoutAside(callout: HTMLElement, ctx: MarkdownPostProcessorContext, root: HTMLElement): void {
+function layoutAside(callout: HTMLElement, ctx: MarkdownPostProcessorContext, root: HTMLElement, captions: Captions): void {
   if (callout.hasClass(DONE)) return;
   const content = callout.querySelector<HTMLElement>(".callout-content");
   if (!content) return;
@@ -111,7 +124,7 @@ function layoutAside(callout: HTMLElement, ctx: MarkdownPostProcessorContext, ro
     }
     if (!first.hasChildNodes()) first.remove();
   }
-  Array.from(media.children).forEach((img) => wrapItem(img as HTMLElement));
+  Array.from(media.children).forEach((img) => wrapItem(img as HTMLElement, captions));
 
   const text = createDiv({ cls: "figl-aside-text" });
   while (content.firstChild) text.appendChild(content.firstChild);

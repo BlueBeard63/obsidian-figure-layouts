@@ -22,7 +22,8 @@
 /* ---------- reading view (and callouts rendered in Live Preview) ---------- */
 
 .markdown-rendered .figl-figure .figl-item { gap: 10px; }
-.markdown-rendered .figl-figure img { max-height: 80vh; }
+.markdown-rendered .figl-figure img,
+.markdown-rendered .figl-figure video { max-height: 80vh; }
 
 .markdown-rendered .figl-row,
 .markdown-rendered .figl-grid {
@@ -35,7 +36,9 @@
 .markdown-rendered .figl-grid > p { display: contents; }
 
 .figl-row .figl-item img,
+.figl-row .figl-item video,
 .figl-grid .figl-item img,
+.figl-grid .figl-item video,
 .figl-lp-row .image-embed img {
   display: block;
   width: 100% !important;
@@ -93,13 +96,15 @@
   gap: 10px;
 }
 /* a tall photo is capped so it can't dwarf the text beside it */
-.figl-aside-media img { display: block; max-width: 100%; max-height: 60vh; width: auto; height: auto; }
+.figl-aside-media img,
+.figl-aside-media video { display: block; max-width: 100%; max-height: 60vh; width: auto; height: auto; }
 .figl-aside-text > :first-child { margin-top: 0; }
 .figl-aside-text > :last-child { margin-bottom: 0; }
 
 /* ---------- Live Preview: lines that hold only images ---------- */
 
-.cm-line.figl-lp-figure .figl-lp-caption { margin-top: 10px; }
+/* a single figure's caption is a block widget under its line */
+.figl-lp-block-caption { margin: 2px 0 12px; }
 
 /* Each image is followed by its caption widget, so two rows filled column by column pair them up. */
 .cm-line.figl-lp-row {

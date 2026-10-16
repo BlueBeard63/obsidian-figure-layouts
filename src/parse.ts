@@ -1,14 +1,15 @@
 // Pure helpers (no Obsidian or DOM imports) so they can be unit tested with node --test.
 // The rules mirror the portfolio site build (internal/site/markdown.go) so the editor and the site agree.
 
-/** File extensions a ![[wiki embed]] must have to count as an image. */
-export const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif)$/i;
+/** File extensions a ![[wiki embed]] must have to be laid out: images, and videos (which get the same
+ *  figures, rows and asides). */
+export const MEDIA_EXT = /\.(png|jpe?g|gif|webp|svg|avif|mp4|webm|m4v|mov)$/i;
 
 /** Obsidian's ![[img.png|300]] or |300x200 size hint: a display width, not a caption. */
 const SIZE_HINT = /^\d+(x\d+)?$/;
 
-export function isImageFile(name: string): boolean {
-  return IMAGE_EXT.test(name.split("#")[0].trim());
+export function isMediaFile(name: string): boolean {
+  return MEDIA_EXT.test(name.split("#")[0].trim());
 }
 
 function basename(path: string): string {
@@ -72,7 +73,7 @@ export function parseImageLine(text: string): LineImage[] | null {
     const wiki = WIKI_IMAGE.exec(text);
     if (wiki) {
       const target = wiki[1].trim();
-      if (!isImageFile(target)) return null;
+      if (!isMediaFile(target)) return null;
       // A bar escaped as \| (Obsidian writes that inside tables) is still a bar.
       images.push({ target, caption: captionFor(wiki[2]?.replace(/\\\|/g, "|"), target), from: i, to: i + wiki[0].length });
       i += wiki[0].length;
@@ -88,6 +89,23 @@ export function parseImageLine(text: string): LineImage[] | null {
     return null;
   }
   return images.length ? images : null;
+}
+
+/**
+ * Captions for the wiki embeds in a stretch of source text, by file name, in order (a file embedded
+ * twice gets two entries). Reading view fills an embed's alt with this text for images but not for
+ * videos, so the source is the only reliable place to read it.
+ */
+export function embedCaptions(text: string): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  for (const m of text.matchAll(/!\[\[([^\]|]+?)(?:\|((?:\\\||[^\]])*))?\]\]/g)) {
+    const target = m[1].trim();
+    if (!isMediaFile(target)) continue;
+    const list = out.get(target) ?? [];
+    list.push(captionFor(m[2]?.replace(/\\\|/g, "|"), target));
+    out.set(target, list);
+  }
+  return out;
 }
 
 export interface CalloutHeader {

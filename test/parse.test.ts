@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { asideSide, captionFor, galleryColumns, isImageFile, parseCalloutHeader, parseImageLine, phoneColumns } from "../src/parse.ts";
+import { asideSide, captionFor, embedCaptions, galleryColumns, isMediaFile, parseCalloutHeader, parseImageLine, phoneColumns } from "../src/parse.ts";
 
 test("captionFor drops size hints and repeated file names", () => {
   assert.equal(captionFor("The login page", "login.png"), "The login page");
@@ -27,11 +27,13 @@ test("phoneColumns caps at two", () => {
   assert.equal(phoneColumns(3), 2);
 });
 
-test("isImageFile", () => {
-  assert.ok(isImageFile("a.PNG"));
-  assert.ok(isImageFile("a.jpeg"));
-  assert.ok(!isImageFile("Note"));
-  assert.ok(!isImageFile("clip.mp4"));
+test("isMediaFile: images and videos", () => {
+  assert.ok(isMediaFile("a.PNG"));
+  assert.ok(isMediaFile("a.jpeg"));
+  assert.ok(!isMediaFile("Note"));
+  assert.ok(isMediaFile("clip.mp4"));
+  assert.ok(isMediaFile("clip.WEBM"));
+  assert.ok(!isMediaFile("song.mp3"));
 });
 
 test("parseImageLine: one figure", () => {
@@ -84,4 +86,12 @@ test("asideSide defaults to right", () => {
   assert.equal(asideSide("right"), "right");
   assert.equal(asideSide(""), "right");
   assert.equal(asideSide(null), "right");
+});
+
+test("embedCaptions reads captions from source, videos included", () => {
+  const caps = embedCaptions("![[demo.mp4|The demo]]\n> ![[a.png]] ![[a.png|Second]] ![[Note]] ![[w.png|400]]");
+  assert.deepEqual(caps.get("demo.mp4"), ["The demo"]);
+  assert.deepEqual(caps.get("a.png"), ["", "Second"]);
+  assert.deepEqual(caps.get("w.png"), [""]);
+  assert.equal(caps.has("Note"), false);
 });
