@@ -23,7 +23,7 @@ export function registerReadingView(plugin: Plugin): void {
 /** True for a Markdown <img> or an embed of an image file. Post-processors run before embeds load, and
  *  Obsidian only adds "image-embed" once one has, so embeds are judged by their file name. */
 function isImage(node: Node): node is HTMLElement {
-  if (!(node instanceof HTMLElement)) return false;
+  if (!node.instanceOf(HTMLElement)) return false;
   if (node.tagName === "IMG") return true;
   return node.hasClass("internal-embed") && (node.hasClass("image-embed") || node.hasClass("video-embed") || isMediaFile(node.getAttribute("src") ?? ""));
 }
@@ -31,7 +31,7 @@ function isImage(node: Node): node is HTMLElement {
 /** Whitespace and line breaks between images. */
 function isFiller(node: Node): boolean {
   if (node.nodeType === Node.TEXT_NODE) return !(node.textContent ?? "").trim();
-  return node instanceof HTMLElement && node.tagName === "BR";
+  return node.instanceOf(HTMLElement) && node.tagName === "BR";
 }
 
 /** The images of a paragraph that holds only images (and whitespace or line breaks), else null. */
@@ -92,13 +92,19 @@ function layoutGallery(callout: HTMLElement, ctx: MarkdownPostProcessorContext, 
   const content = callout.querySelector<HTMLElement>(".callout-content");
   if (!content) return;
   const images: HTMLElement[] = [];
+  const imageParagraphs: HTMLElement[] = [];
   for (const p of Array.from(content.querySelectorAll<HTMLElement>("p"))) {
-    images.push(...(imageChildren(p) ?? []));
+    const found = imageChildren(p);
+    if (!found) continue;
+    images.push(...found);
+    if (p.parentElement === content) imageParagraphs.push(p);
   }
   callout.addClass(DONE, "figl-gallery");
   content.addClass("figl-grid");
   setColumns(content, galleryColumns(callout.getAttribute("data-callout-metadata"), images.length));
   images.forEach((img) => wrapItem(img, captions));
+  // Lift the figures out of their paragraphs so each is a cell of the grid.
+  imageParagraphs.forEach((p) => p.replaceWith(...Array.from(p.children).filter((el) => el.hasClass("figl-item"))));
   if (!hasTitle(callout, "gallery", ctx, root)) callout.addClass("figl-untitled");
 }
 
@@ -116,7 +122,7 @@ function layoutAside(callout: HTMLElement, ctx: MarkdownPostProcessorContext, ro
   // The leading images of the first paragraph, even when text follows on the next line (same paragraph).
   const media = createEl("figure", { cls: "figl-aside-media" });
   const first = content.firstElementChild;
-  if (first instanceof HTMLElement && first.tagName === "P") {
+  if (first?.instanceOf(HTMLElement) && first.tagName === "P") {
     for (const node of Array.from(first.childNodes)) {
       if (isImage(node)) media.appendChild(node);
       else if (isFiller(node)) node.remove();

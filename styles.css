@@ -33,7 +33,6 @@
 }
 .markdown-rendered .figl-row > br,
 .markdown-rendered .figl-grid br { display: none; }
-.markdown-rendered .figl-grid > p { display: contents; }
 
 .figl-row .figl-item img,
 .figl-row .figl-item video,
@@ -41,8 +40,8 @@
 .figl-grid .figl-item video,
 .figl-lp-row .image-embed img {
   display: block;
-  width: 100% !important;
-  height: auto !important;
+  width: 100%;
+  height: auto;
   aspect-ratio: 4 / 3;
   object-fit: cover;
 }
@@ -112,8 +111,7 @@
   grid-template-rows: auto auto;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
-  column-gap: 12px;
-  row-gap: 8px;
+  gap: 8px 12px;
   align-items: start;
 }
 .cm-line.figl-lp-row > .cm-widgetBuffer { display: none; }
